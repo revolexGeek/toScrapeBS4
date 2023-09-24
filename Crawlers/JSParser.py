@@ -133,17 +133,25 @@ class JSParser(Parser):
 
 
 class JSParserWD:
-    def __init__(self, delayed: bool = False):
+    def __init__(self, delayed: bool = False, headless: bool = True):
         super().__init__()
         self.delayed: bool = delayed
-        self.baseUrl: str = "http://quotes.toscrape.com"  # стартовая ссылка
-        self.currentUrl: str = self.baseUrl + "/js" if not self.delayed else self.baseUrl + "/js-delayed"  # Итерируемая ссылка
-        self.driver: uc.Chrome = uc.Chrome(headless=False, use_subprocess=True, version_main=116)
-        self.classifiedQuotes: list = list()
+        self.baseUrl: str = "http://quotes.toscrape.com"  # Стартовая ссылка
+        self.currentUrl: str = self.baseUrl + "/js"\
+            if not self.delayed\
+            else self.baseUrl + "/js-delayed"  # Итерируемая ссылка
+        self.driver: uc.Chrome = uc.Chrome(headless=headless, use_subprocess=True, version_main=116)  # WebDriver
+        self.classifiedQuotes: list = list()  # Цитаты, выраженные в объектах типа 'Quote'
         self.startTime = time.time()  # Время начала работы программы
         self.endTime = None  # Время конца работы программы
 
     def execute(self):
+        """
+        Точка запуска сбора данных
+        :return:
+        """
+
+        # Итерируемся по всем страницам веб-приложения
         isNextPageExists = True
         self.makeRequest(self.currentUrl)
         while isNextPageExists:
@@ -151,6 +159,7 @@ class JSParserWD:
             self.processPage()
             isNextPageExists = self.hasNextPage()
 
+        # Конвертируем собранную информацию в Excel файл
         titles = ['Текст цитаты',
                   'Имя автора',
                   'Дата рождения автора',
@@ -162,6 +171,8 @@ class JSParserWD:
 
         formattedData = self.formatQuotes(titles)
         self.convertToExcel(formattedData[0], formattedData[1])
+
+        # Завершаем выполнение программы
         self.silentQuit()
 
     def formatQuotes(self, titles: list) -> Tuple[list, list]:
@@ -169,7 +180,7 @@ class JSParserWD:
         Преобразование self.classifiedQuotes в два списка для экспорта при помощи ExcelManager
         :return: Двумерный кортеж состоящий из списка заголовков и списка построчно-заполняемых данных
         """
-        formatedQuotes = list()
+        formattedQuotes = list()
         for quote in self.classifiedQuotes:
             temp = list()
             temp.append(quote.text)
@@ -181,22 +192,30 @@ class JSParserWD:
             temp.append(quote.getTagsString(isText=True))
             temp.append(quote.getTagsString(isText=False))
 
-            formatedQuotes.append(temp)
+            formattedQuotes.append(temp)
 
-        return titles, formatedQuotes
+        return titles, formattedQuotes
 
-    def convertToExcel(self, titles, data):
+    @staticmethod
+    def convertToExcel(titles, data):
         """
         Конвертирование собранных данных в Excel
         :param titles: Список заголовков
         :param data: Список собранных данных (построчно)
         :return:
         """
+        print("[%] Создаю Excel документ..")
         excelMan = ExcelManager()
         excelMan.fillSheet(titles, data)
         excelMan.save()
 
     def makeRequest(self, link: str):
+        """
+        Направление объекта Driver, открытие ссылок
+        :param link: Ссылка, к которой необходимо обратится
+        :return:
+        """
+        print(f"[*] Делаю запрос к {link}...")
         self.driver.get(link)
 
     def hasNextPage(self) -> bool:
@@ -204,11 +223,11 @@ class JSParserWD:
         Переход к следующей странице, если таковая имеется
         :return: "True" если следующая страница существует, "False" в обратном случае
         """
+        # Скорее всего можно упростить!
+        print("[%] Проверяю, есть ли следующая страница..")
         pager = self.driver.find_element(By.XPATH, "/html/body/div/nav/ul")
-        print(f'pager: {pager}')
         if pager is not None:
             nextButton = pager.find_elements(By.TAG_NAME, "li")
-            print(f"nextButton: {nextButton}\nlen: {len(nextButton)}")
             if len(nextButton) == 2:
                 if nextButton[0].get_attribute("class") == "next":
                     nextButton = nextButton[0]
@@ -219,9 +238,9 @@ class JSParserWD:
                     return False
                 else:
                     nextButton = nextButton[0]
-            print(f"nextButton: {nextButton}")
 
             if nextButton is not None:
+                print("[*] Следующая страница найдена. Произвожу переход!")
                 nextButton.find_element(By.CSS_SELECTOR, "a").click()
                 return True
             else:
@@ -229,9 +248,17 @@ class JSParserWD:
         return False
 
     def processPage(self):
+        """
+        Обработка текущей страницы
+        :return:
+        """
         if self.delayed:
+            # Ожидание WebElement в DOM дереве, с таймаутом 20 секунд
+            print("[%] Ожидаю появление элемента в DOM-дереве..")
             WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".quote")))
         for quote in self.driver.find_elements(By.CSS_SELECTOR, "div.quote"):
+            # Обработка всех цитат, представленных на странице
+            print("[%] Обрабатываю цитаты на текущей странице..")
             text = quote.find_element(By.CSS_SELECTOR, "span.text").text
             author = Author(
                 name=quote.find_element(By.CSS_SELECTOR, "small.author").text,
@@ -240,12 +267,15 @@ class JSParserWD:
                 description="-",
                 link="-"
             )
+
+            # Сбор тэгов
             tags = list()
             for tag in quote.find_elements(By.CSS_SELECTOR, "a.tag"):
                 tags.append(
                     [tag.text, "-"]
                 )
 
+            # Дополнение коллекции собранных цитат
             self.classifiedQuotes.append(
                 Quote(
                     text=text,
@@ -254,7 +284,11 @@ class JSParserWD:
                 )
             )
 
-    def calculateWorkTime(self):
+    def calculateWorkTime(self) -> float:
+        """
+        Рассчет времени работы программы
+        :return: Число - время работы программы в секундах
+        """
         self.endTime = time.time()
         return round(self.endTime - self.startTime, 2)
 
@@ -270,8 +304,18 @@ class JSParserWD:
         self.killDriver()
 
     def killDriver(self):
+        """
+        Убить (завершить) выполнение объекта WebDriver
+        :return:
+        """
         if self.driver.service.is_connectable():
+            print("[X] Завершаю работу WebDriver'а...")
             self.driver.quit()
 
     def __del__(self):
+        """
+        При удалении экземпляра класса, проверка на закрытость WebDriver'а, чтобы не наплодить миллион копий при
+        дебаге
+        :return:
+        """
         self.killDriver()
