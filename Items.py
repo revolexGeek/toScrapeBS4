@@ -84,10 +84,10 @@ if __name__ == '__main__':
                     "Description",
                     "https://quotes.toscrape.com/author/Evan")
     tags = [
-        ['Cloudy', "https://example.com/tag/cloudy"],
-        ['Evening', "https://example.com/tag/evening"]
+        ['Cloudy', "https://quotes.toscrape.com/tag/cloudy"],
+        ['Evening', "https://quotes.toscrape.com/tag/evening"]
     ]
-    quote = Quote(text="Текст цитаты",
+    quote = Quote(text="Quote's text.",
                   author=author,
                   tags=tags)
 
@@ -97,9 +97,9 @@ if __name__ == '__main__':
     print(quote.tags)
 
     """
-    Output:
+    Вывод:
     
-    Текст цитаты
+    Quote's text.
     ['Evan', '12/01/2004', 'Murmansk', 'Description', 'https://quotes.toscrape.com/author/Evan']
     [<Tag Cloudy>, <Tag Evening>]
     """

@@ -1,3 +1,5 @@
+import asyncio
+
 from bs4 import BeautifulSoup
 from typing import Tuple
 
@@ -137,3 +139,23 @@ class BasicParser(Parser):
             self.currentUrl = self.baseUrl + pager
             return True
         return False
+
+
+from Crawlers.BasicParser import BasicParser
+import asyncio
+
+
+async def main():
+    # Создание экземпляра класса BasicParser
+    parser = BasicParser()
+
+    # Запуск сбора данных
+    await parser.execute()
+
+
+if __name__ == "__main__":
+    # Получение цикла событий asyncio
+    loop = asyncio.get_event_loop()
+
+    # Запуск асинхронной функции main в цикле событий
+    loop.run_until_complete(main())

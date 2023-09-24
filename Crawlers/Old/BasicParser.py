@@ -11,7 +11,7 @@ from Items import Author, Quote
 
 # TODO: add multithreading or asynchronous support.
 class Parser:
-    def __init__(self, outputFilename: str = "output.xlsx", delay: Tuple[int, int] = (0, 0)):
+    def __init__(self, outputFilename: str = "BasicParserOutput.xlsx", delay: Tuple[int, int] = (0, 0)):
         self.delay = delay  # Время задержки между запросами
         self.setDelay(delay)
         self.base_url: str = "http://quotes.toscrape.com"  # Изначальная ссылка (константа)
