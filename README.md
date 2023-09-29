@@ -109,7 +109,7 @@ python main.py
 - [X] InfinityLoadParser
 - [X] JSParser
 - [X] JSParserWD
-- [ ] TablefulParser
+- [X] TablefulParser
 - [ ] AuthParser
 - [ ] ViewStateParser
 - [ ] RandomQuoteParser
