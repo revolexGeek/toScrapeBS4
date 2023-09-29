@@ -3,6 +3,7 @@ import asyncio
 from Crawlers.BasicParser import BasicParser
 from Crawlers.InfinityLoadParser import InfinityLoadParser
 from Crawlers.JSParser import JSParser, JSParserWD
+from Crawlers.TablefulParser import TablefulParser
 
 
 async def generateOrderedList(items: list) -> str:
@@ -80,6 +81,18 @@ async def getParserDescription(parserClass: str) -> str:
                        "В данном типе парсера происходит прогрузка JavaScript кода с помощью\n"
                        " использования \"настоящего\" клиента (или же WebDriver'а), зачастую в Headless\n"
                        "(безглавом, без открытия браузера) режиме или же без него.")
+    elif parserClass == "TablefulParser":
+        features = await generateOrderedList(
+            [
+                'Текст каждой из цитат',
+                'Имени автора каждой из цитат',
+                'Все теги каждой из цитат'
+            ]
+        )
+        description = ("Данный тип парсера предполагает сбор таких данных как:\n"
+                       f"{features}"
+                       "В данном типе парсера происходит сбор данных внутри сбитой таблицы\n"
+                       "Она предполагает из себя проведение корректной структуризации всей таблицы.")
     else:
         raise Exception(f"Краткая информация о парсере типа \"{parserClass}\" еще не задана.")
 
@@ -144,7 +157,7 @@ async def main():
         elif parserType == 6:
             parser = JSParserWD(delayed=True)
         elif parserType == 7:
-            raise notImpl
+            parser = TablefulParser()
         elif parserType == 8:
             raise notImpl
         elif parserType == 9:
