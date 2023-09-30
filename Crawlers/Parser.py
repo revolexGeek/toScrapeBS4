@@ -7,18 +7,31 @@ import time
 
 from DataManipulation.ExcelManager import ExcelManager
 from Exceptions import TypeException, WrongParamsException
+from Helpers.AuthManager import AuthManager
 
 
 class Parser:
-    def __init__(self):
+    def __init__(self, useAuthorizedSession: bool = False):
+        self.useAuthorizedSession: bool = useAuthorizedSession
         self.delay = (0, 0)  # Задержка между запросами
         self.baseUrl: str = "http://quotes.toscrape.com"  # Базовая ссылка
         self.currentUrl: str = self.baseUrl  # Итерируемая ссылка
-        self.session: ClientSession = ClientSession()  # Объект сессии
+
+        # Работа с объектом сессии
+        self.session = ClientSession()
         self.classifiedQuotes: list = list()  # Собранные цитаты в виде класса 'Quote'
-        self.requestCounter = 0  # Количество сделанных запросов
+        self.requestCounter: int = 0  # Количество сделанных запросов
         self.startTime = time.time()  # Время начала работы программы
         self.endTime = None  # Время конца работы программы
+
+    async def authorizeSession(self):
+        """
+        Подключение авторизованного объекта ClientSession
+        Подробнее в файле: Helpers/AuthManager.py
+        :return:
+        """
+        authManager = AuthManager()
+        self.session = await authManager.getAuthorizedSession()
 
     async def execute(self):
         """

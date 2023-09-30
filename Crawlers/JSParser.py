@@ -15,14 +15,18 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class JSParser(Parser):
-    def __init__(self, delayed: bool = False):
+    def __init__(self, delayed: bool = False, useAuthorizedSession: bool = False):
         super().__init__()
         self.delayed = delayed
+        self.useAuthorizedSession = useAuthorizedSession
         self.baseUrl = "http://quotes.toscrape.com"  # стартовая ссылка
         self.soup = None  # Объект BeautifulSoup
         self.currentUrl = self.baseUrl + "/js" if not self.delayed else self.baseUrl + "/js-delayed"  # Итерируемая ссылка
 
     async def execute(self):
+        if self.useAuthorizedSession:
+            await self.authorizeSession()
+
         isNextPageExists = True
         while isNextPageExists:
             await self.makeRequest(self.currentUrl)

@@ -5,8 +5,9 @@ from Items import Author, Quote
 
 
 class InfinityLoadParser(Parser):
-    def __init__(self):
+    def __init__(self, useAuthorizedSession: bool = False):
         super().__init__()
+        self.useAuthorizedSession = useAuthorizedSession
         self.page: int = 1  # Страница по счету
         self.apiUrl = "http://quotes.toscrape.com/api/quotes"  # Путь к API
         self.json: json = None  # Ответ API
@@ -58,6 +59,9 @@ class InfinityLoadParser(Parser):
         return False
 
     async def execute(self):
+        if self.useAuthorizedSession:
+            await self.authorizeSession()
+
         hasNext = True
         while hasNext:
             await self.makeRequest(self.apiUrl)
