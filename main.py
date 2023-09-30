@@ -3,7 +3,9 @@ import asyncio
 from Crawlers.BasicParser import BasicParser
 from Crawlers.InfinityLoadParser import InfinityLoadParser
 from Crawlers.JSParser import JSParser, JSParserWD
+from Crawlers.RandomQuoteParser import RandomQuoteParser
 from Crawlers.TablefulParser import TablefulParser
+from Crawlers.ViewStateParser import ViewStateParser
 
 
 async def generateOrderedList(items: list) -> str:
@@ -93,6 +95,32 @@ async def getParserDescription(parserClass: str) -> str:
                        f"{features}"
                        "В данном типе парсера происходит сбор данных внутри сбитой таблицы\n"
                        "Она предполагает из себя проведение корректной структуризации всей таблицы.")
+    elif parserClass == "ViewStateParser":
+        features = await generateOrderedList(
+            [
+                'Текст каждой из цитат',
+                'Имени автора каждой из цитат',
+                'Все теги каждой из цитат'
+            ]
+        )
+        description = ("Данный тип парсера предполагает сбор таких данных как:\n"
+                       f"{features}"
+                       "Данный тип парсера предполагает сбор данных из динамической формы,\n"
+                       " в которой при вводе одного поля меняется и другое в зависимости от выбора.")
+    elif parserClass == "RandomQuoteParser":
+        features = await generateOrderedList(
+            [
+                'Текст каждой из цитат',
+                'Имя автора каждой из цитат',
+                'Дату рождения автора каждой из цитат',
+                'Место рождения автора каждой из цитат',
+                'Описание автора каждой из цитат',
+                'Все теги каждой из цитат'
+            ]
+        )
+        description = ("Данный тип парсера предполагает сбор таких данных как:\n"
+                       f"{features}"
+                       "Данный тип парсера является самым легким, т.к. он сконструирован по подобию BasicParser.")
     else:
         raise Exception(f"Краткая информация о парсере типа \"{parserClass}\" еще не задана.")
 
@@ -124,7 +152,7 @@ async def main():
         print("5. JSParserWD, WebDriver (JSParser, но с использование WebDriver)")
         print("6. JSParserWD, WebDriver, delayed=True (JSParserWD с использованием задержки)")
         print("7. TablefulParser (Таблица, основанная на беспорядочной компоновке)")
-        print("8. AuthParser (Вход в систему с помощью CSRF-токена)")
+        print("8. AuthParser, Basic + useAuthorizedSession=True (Вход в систему с помощью CSRF-токена)")
         print("9. ViewStateParser (Форма фильтрации на основе AJAX с использованием ViewStates)")
         print("10. RandomQuoteParser (Случайные цитаты, с выбором количества отображения)")
         if not validParser:
@@ -141,7 +169,6 @@ async def main():
             validNumber = False
             continue
 
-        # TODO: Реализовать TablefulParser, AuthParser, ViewStateParser, RandomQuotesParser
         notImpl = NotImplementedError("Выбранный тип парсера на данный момент находится в разработке.")
         parser = None
         if parserType == 1:
@@ -159,17 +186,18 @@ async def main():
         elif parserType == 7:
             parser = TablefulParser()
         elif parserType == 8:
-            raise notImpl
+            parser = BasicParser(useAuthorizedSession=True)
         elif parserType == 9:
-            raise notImpl
+            parser = ViewStateParser()
         elif parserType == 10:
-            raise notImpl
+            parser = RandomQuoteParser(toGather=100)
         else:
             validParser = False
             continue
 
+        # Вывод базовой информации о типе парсера
         parserClassname = parser.__class__.__name__
-        print(f"Вы выбрали {parserType} тип парсера ({parserClassname})!\n")
+        print(f"Вы выбрали {parserType} тип парсера ({parserClassname})!")
         print(await getParserDescription(parserClassname))
 
         # Проверка, асинхронен ли тип парсера (нативный WebDriver не поддерживает асинхронность как таковую)
@@ -178,7 +206,6 @@ async def main():
         else:
             parser.execute()
 
-        # Выход из While
         break
 
 

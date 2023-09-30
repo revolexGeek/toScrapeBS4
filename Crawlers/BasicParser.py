@@ -8,8 +8,9 @@ from Items import Author, Quote
 
 
 class BasicParser(Parser):
-    def __init__(self):
+    def __init__(self, useAuthorizedSession: bool = False):
         super().__init__()
+        self.useAuthorizedSession = useAuthorizedSession
         self.soup = None  # Объект BeautifulSoup
 
     async def execute(self):
@@ -17,6 +18,9 @@ class BasicParser(Parser):
         Точка запуска сбора данных
         :return:
         """
+        if self.useAuthorizedSession:
+            await self.authorizeSession()
+
         isNextPageExists = True
         while isNextPageExists:
             await self.makeRequest(self.currentUrl)

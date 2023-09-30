@@ -5,8 +5,9 @@ from Items import Quote, Author
 
 
 class TablefulParser(Parser):
-    def __init__(self):
+    def __init__(self, useAuthorizedSession: bool = False):
         super().__init__()
+        self.useAuthorizedSession = useAuthorizedSession
         self.baseUrl: str = "http://quotes.toscrape.com"
         self.currentUrl: str = self.baseUrl + "/tableful"
         self.soup = None
@@ -88,6 +89,9 @@ class TablefulParser(Parser):
                 )
 
     async def execute(self):
+        if self.useAuthorizedSession:
+            await self.authorizeSession()
+
         hasNext = True
         while hasNext:
             await self.makeRequest(self.currentUrl)
